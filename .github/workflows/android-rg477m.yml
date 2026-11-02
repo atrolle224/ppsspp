@@ -1,0 +1,58 @@
+name: Android 477M
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Version tags from upstream (a fork has none)
+        run: |
+          if [ "$(git tag -l 'v[0-9]*' | wc -l)" = 0 ]; then
+            git remote add upstream https://github.com/hrydgard/ppsspp.git
+            git fetch --deepen=15000 --no-recurse-submodules --tags --force upstream || true
+          fi
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: arm64 only
+        run: |
+          sed -i '0,/abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86_64"))/s//abiFilters.addAll(listOf("arm64-v8a"))/' android/build.gradle.kts
+          grep -n 'abiFilters' android/build.gradle.kts | head -2
+
+      - name: Assemble
+        run: ./gradlew assembleNormalOptimized --stacktrace
+
+      - name: Collect
+        run: |
+          mkdir out
+          find android/build -name "*.apk" -path "*normal*" -exec cp {} out/ \;
+          ls -l out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ppsspp-477m-arm64
+          path: out/*.apk
+
+      - name: Keep only the newest build
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run list -R "$GITHUB_REPOSITORY" -w "Android 477M" -L 50 --json databaseId \
+            --jq ".[].databaseId | select(. != ${{ github.run_id }})" | while read -r id; do
+            gh run delete "$id" -R "$GITHUB_REPOSITORY" || true
+          done

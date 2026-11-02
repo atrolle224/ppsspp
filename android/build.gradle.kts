@@ -190,7 +190,7 @@ android {
 	productFlavors {
 		create("normal") {
 			isDefault = true
-			applicationId = "org.ppsspp.ppsspp"
+			applicationId = "org.ppsspp.ppsspp.rg477m"
 			dimension = "variant"
 			externalNativeBuild {
 				cmake {

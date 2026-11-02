@@ -585,7 +585,8 @@ static int DefaultInternalResolution() {
 		return 4;
 	}
 	int longestDisplaySide = std::max(System_GetPropertyInt(SYSPROP_DISPLAY_XRES), System_GetPropertyInt(SYSPROP_DISPLAY_YRES));
-	int scale = longestDisplaySide >= 1000 ? 2 : 1;
+	// 3x (1440 x 816) on a 1280-wide handheld renders above the screen and is scaled down
+	int scale = longestDisplaySide >= 1280 ? 3 : longestDisplaySide >= 1000 ? 2 : 1;
 	INFO_LOG(Log::Config, "Longest display side: %d pixels. Choosing scale %d", longestDisplaySide, scale);
 	return scale;
 #elif PPSSPP_PLATFORM(IOS)
