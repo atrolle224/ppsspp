@@ -2,6 +2,8 @@ name: Android 477M
 
 on:
   workflow_dispatch:
+  push:
+    branches: [rg477m]
 
 permissions:
   contents: read
