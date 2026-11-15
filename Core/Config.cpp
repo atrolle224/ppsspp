@@ -1884,6 +1884,15 @@ void Config::Load(const char *iniFileName, const char *controllerIniFilename) {
 		postShaderSetting->Set("ColorCorrectionSettingCurrentValue3", 1.1f);
 		postShaderSetting->Set("ColorCorrectionSettingCurrentValue4", 1.0f);
 	}
+#if PPSSPP_PLATFORM(ANDROID)
+	// RG477M build: a CRT look once, also on an existing install; Off stays off after.
+	Section *rg477m = iniFile.GetOrCreateSection("RG477M");
+	if (!IsVREnabled() && !rg477m->HasKey("CrtDefault")) {
+		postShaderChain->Clear();
+		postShaderChain->Set("PostShader1", "Scanlines");
+		rg477m->Set("CrtDefault", true);
+	}
+#endif
 
 	// Load post process shader values
 	mPostShaderSetting.clear();
@@ -1966,6 +1975,9 @@ bool Config::Save(const char *saveReason) {
 
 		// Need to do this somewhere...
 		bFirstRun = false;
+#if PPSSPP_PLATFORM(ANDROID)
+		iniFile.GetOrCreateSection("RG477M")->Set("CrtDefault", true);
+#endif
 
 		// Do the writing.
 		for (const ConfigSectionMeta &meta : g_sectionMeta) {
